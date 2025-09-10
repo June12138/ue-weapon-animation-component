@@ -12,7 +12,7 @@ UCPP_WeaponAnimComponent::UCPP_WeaponAnimComponent()
 	//Base模块默认值
 	BaseStates.Add("IdleBase", FTransform(FRotator(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f), FVector(1.f, 1.f, 1.f)));
 	BaseStates.Add("SprintBase", FTransform(FRotator(-19,-35,-24), FVector(25, -1, -13), FVector(1.f, 1.f, 1.f)));
-	BaseStates.Add("CrouchBase", FTransform(FRotator(-2, -14, 3), FVector(25, 9, -8), FVector(1.f, 1.f, 1.f)));
+	BaseStates.Add("CrouchBase", FTransform(FRotator(0, 0, -10), FVector(25, 8, -6), FVector(1.f, 1.f, 1.f)));
 	//Recoil模块默认值
 	RecoilStates.Add("DefaultRecoil", FWeaponRecoilStruct{
 		FVector(-1.f, 0.f, 0.f), //后座终止位置偏移
@@ -49,6 +49,10 @@ UCPP_WeaponAnimComponent::UCPP_WeaponAnimComponent()
 void UCPP_WeaponAnimComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!PlayAnimationOnStart){
+		StopAnimate();
+		return;
+	}
 	// ...
 }
 
@@ -64,7 +68,6 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 	WeaponRoot = WeaponRootToSet;
 	Sight = SightToSet;
 	CameraRoot = CameraRootToSet;
-	CurrentBobResult = FVector::ZeroVector;
 	if (WeaponRoot && CameraRoot && Sight) {
 		//遍历InitializeBases中的每一项并设置为WeaponRoot的相对变换
 		for (FName& InitializeBase : InitializeBases) {
@@ -78,18 +81,23 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		CamInitialLocation = CameraRoot->GetRelativeLocation();
 	}
 	else {
+		StopAnimate();
 		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init failed"));
+		return;
 	}
 	//尝试获取Owner Pawn
 	OwnerPawn = Cast<APawn>(GetOwner());
 	if (!OwnerPawn){
-		SetComponentTickEnabled(false);
+		StopAnimate();
 		UE_LOG(LogTemp, Error, TEXT("OwnerPawn not found"));
+		return;
 	}
 	TrySetController();
 	if (!Controller)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Weapon Anim Component: Player Controller init failed!"));
+		StopAnimate();
+		return;
 	}
 	//Base模块初始化
 	if (BaseStates.Contains(DefaultBase)){
@@ -97,23 +105,26 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		CurrentBaseLocation = TargetBaseTransform.GetLocation();
 		CurrentBaseRotation = TargetBaseTransform.GetRotation().Rotator();
 	}else{
-		SetComponentTickEnabled(false);
+		StopAnimate();
 		UE_LOG(LogTemp, Error, TEXT("Base default not found, check settings under Base"));
+		return;
 	}
 	//Bob模块初始化
 	if (BobStates.Contains(DefaultBobStatic) && BobStates.Contains(DefaultBobMovement)){
 		CurrentStaticBob = BobStates[DefaultBobStatic];
 		CurrentMovementBob = BobStates[DefaultBobMovement];
 	}else{
-		SetComponentTickEnabled(false);
+		StopAnimate();
 		UE_LOG(LogTemp, Error, TEXT("Bob default not found, check settings under Bob"));
+		return;
 	}
 	//Sway模块初始化
 	if (SwayStates.Contains(DefaultSway)){
 		CurrentSwayStruct = SwayStates[DefaultSway];
 	}else{
-		SetComponentTickEnabled(false);
+		StopAnimate();
 		UE_LOG(LogTemp, Error, TEXT("Sway default not found, check settings under Sway"));
+		return; 
 	}
 	//Recoil模块初始化
 	if (RecoilStates.Contains(DefaultRecoil)){
@@ -123,8 +134,9 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		if (Controller) {
 			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		}else{
-			SetComponentTickEnabled(false);
+			StopAnimate();
 			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
+			return;
 		}
 	}
 	UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
@@ -138,7 +150,7 @@ void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offse
 		ADSBaseRotation = SightRotation;
 	}
 }
-void UCPP_WeaponAnimComponent::SetInputVector(FVector Vector)
+void UCPP_WeaponAnimComponent::SetInputVector()
 {
 	InputVector = OwnerPawn->GetLastMovementInputVector();
 	InputVector2D = FVector2D(InputVector.X, InputVector.Y);
@@ -153,6 +165,7 @@ void UCPP_WeaponAnimComponent::SetInputRotator(FRotator Rotator)
 void UCPP_WeaponAnimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	SetInputVector();
 	//UpdateSettings();
 	ElapsedTime += DeltaTime;
 	// 更新基准位置和旋转
@@ -475,4 +488,10 @@ void UCPP_WeaponAnimComponent::SetSway(FName SwayName){
 	}else{
 		UE_LOG(LogTemp, Error, TEXT("SwayName %s not found"), *SwayName.ToString());
 	}
+}
+
+void UCPP_WeaponAnimComponent::StopAnimate(){
+	PlayingADSAnimation = false;
+	IsAiming = false;
+	SetComponentTickEnabled(false);
 }
