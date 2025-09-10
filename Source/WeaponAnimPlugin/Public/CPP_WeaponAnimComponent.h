@@ -67,10 +67,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil") float RecoilAnimTime = 0.2f; //后坐力动画时间
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil") UCurveFloat* RecoilCurve;	// 后坐力曲线
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil") UForceFeedbackEffect* RecoilForceFeedbackEffect; //后坐力震动
+	// 镜头晃动耦合
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "Decouple Camera Manager Transform") bool DecoupleCamManagerTransform = false; //如果为否，会在Init时将WeaponRoot挂在到CameraManager的Transform Component下，使镜头摇晃等效果能够传递到WeaponRoot
 	FName DefaultRecoil = "DefaultRecoil";
 	FWeaponRecoilStruct CurrentRecoilStruct;
 	float CurrentRecoilTime = 0.0f;
-		//后坐力位置偏移
+	//后坐力位置偏移
 	FVector RecoilTargetOffset;
 	FVector GradualRecoilOffsetTarget;
 	UPROPERTY(BlueprintReadOnly) FVector CurrentRecoilOffset; // ADS状态下这个变量会影响到准星偏移。万一要用这个数据读取准星，让蓝图能获取到当前后坐力偏移

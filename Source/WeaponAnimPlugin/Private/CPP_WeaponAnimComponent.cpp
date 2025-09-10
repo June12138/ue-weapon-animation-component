@@ -114,6 +114,13 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 	if (RecoilStates.Contains(DefaultRecoil)){
 		CurrentRecoilStruct = RecoilStates[DefaultRecoil];
 	}
+	if (!DecoupleCamManagerTransform){
+		if (Controller) {
+			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		}else{
+			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
+		}
+	}
 	UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
 }
 void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offset, FRotator SightRotation){
