@@ -40,6 +40,7 @@ public:
 	FVector CamInitialLocation;
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void UpdateSettings();
+	APawn* OwnerPawn = nullptr;
 	//设置玩家输入数据
 	UFUNCTION(BlueprintCallable) void SetInputVector(FVector Vector);
 	UFUNCTION(BlueprintCallable) void SetInputRotator(FRotator Rotator);

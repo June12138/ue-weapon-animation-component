@@ -53,7 +53,6 @@ void UCPP_WeaponAnimComponent::BeginPlay()
 }
 
 void UCPP_WeaponAnimComponent::TrySetController(){
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn)
 	{
 	    Controller = Cast<APlayerController>(OwnerPawn->GetController()); // 获取玩家控制器
@@ -80,6 +79,12 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init failed"));
+	}
+	//尝试获取Owner Pawn
+	OwnerPawn = Cast<APawn>(GetOwner());
+	if (!OwnerPawn){
+		SetComponentTickEnabled(false);
+		UE_LOG(LogTemp, Error, TEXT("OwnerPawn not found"));
 	}
 	TrySetController();
 	if (!Controller)
@@ -118,6 +123,7 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		if (Controller) {
 			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		}else{
+			SetComponentTickEnabled(false);
 			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
 		}
 	}
@@ -134,8 +140,8 @@ void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offse
 }
 void UCPP_WeaponAnimComponent::SetInputVector(FVector Vector)
 {
-	InputVector = Vector;
-	InputVector2D = FVector2D(Vector.X, Vector.Y);
+	InputVector = OwnerPawn->GetLastMovementInputVector();
+	InputVector2D = FVector2D(InputVector.X, InputVector.Y);
 }
 
 void UCPP_WeaponAnimComponent::SetInputRotator(FRotator Rotator)
