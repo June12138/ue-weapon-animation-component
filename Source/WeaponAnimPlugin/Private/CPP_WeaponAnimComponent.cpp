@@ -150,10 +150,10 @@ void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offse
 		ADSBaseRotation = SightRotation;
 	}
 }
-void UCPP_WeaponAnimComponent::SetInputVector()
+void UCPP_WeaponAnimComponent::SetInputVector(FVector Vector)
 {
-	InputVector = OwnerPawn->GetLastMovementInputVector();
-	InputVector2D = FVector2D(InputVector.X, InputVector.Y);
+	InputVector = Vector;
+	InputVector2D = FVector2D(Vector.X, Vector.Y);
 }
 
 void UCPP_WeaponAnimComponent::SetInputRotator(FRotator Rotator)
@@ -165,7 +165,6 @@ void UCPP_WeaponAnimComponent::SetInputRotator(FRotator Rotator)
 void UCPP_WeaponAnimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	SetInputVector();
 	//UpdateSettings();
 	ElapsedTime += DeltaTime;
 	// 更新基准位置和旋转

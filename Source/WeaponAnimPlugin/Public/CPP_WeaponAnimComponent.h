@@ -50,7 +50,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StopAnimate();
 	// 设置玩家输入数据
-	void SetInputVector();
+	UFUNCTION(BlueprintCallable)
+	void SetInputVector(FVector Vector);
 	UFUNCTION(BlueprintCallable)
 	void SetInputRotator(FRotator Rotator);
 	FVector2D InputVector2D;
