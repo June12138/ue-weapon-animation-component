@@ -6,7 +6,7 @@
 #include "EStanceState.generated.h"
 
 UENUM(BlueprintType)
-enum EStanceState
+enum class EStanceState: uint8
 {
 	Stand,
 	Crouch,

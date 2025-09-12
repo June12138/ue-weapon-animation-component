@@ -85,61 +85,11 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init failed"));
 		return;
 	}
-	//尝试获取Owner Pawn
-	OwnerPawn = Cast<APawn>(GetOwner());
-	if (!OwnerPawn){
-		StopAnimate();
-		UE_LOG(LogTemp, Error, TEXT("OwnerPawn not found"));
-		return;
-	}
-	TrySetController();
-	if (!Controller)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Weapon Anim Component: Player Controller init failed!"));
-		StopAnimate();
-		return;
-	}
-	//Base模块初始化
-	if (BaseStates.Contains(DefaultBase)){
-		TargetBaseTransform = BaseStates[DefaultBase];
-		CurrentBaseLocation = TargetBaseTransform.GetLocation();
-		CurrentBaseRotation = TargetBaseTransform.GetRotation().Rotator();
-	}else{
-		StopAnimate();
-		UE_LOG(LogTemp, Error, TEXT("Base default not found, check settings under Base"));
-		return;
-	}
-	//Bob模块初始化
-	if (BobStates.Contains(DefaultBobStatic) && BobStates.Contains(DefaultBobMovement)){
-		CurrentStaticBob = BobStates[DefaultBobStatic];
-		CurrentMovementBob = BobStates[DefaultBobMovement];
-	}else{
-		StopAnimate();
-		UE_LOG(LogTemp, Error, TEXT("Bob default not found, check settings under Bob"));
-		return;
-	}
-	//Sway模块初始化
-	if (SwayStates.Contains(DefaultSway)){
-		CurrentSwayStruct = SwayStates[DefaultSway];
-	}else{
-		StopAnimate();
-		UE_LOG(LogTemp, Error, TEXT("Sway default not found, check settings under Sway"));
+	InitSuccess = true;
+	if (!StartAnimate()){
+		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
 		return; 
 	}
-	//Recoil模块初始化
-	if (RecoilStates.Contains(DefaultRecoil)){
-		CurrentRecoilStruct = RecoilStates[DefaultRecoil];
-	}
-	if (!DecoupleCamManagerTransform){
-		if (Controller) {
-			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		}else{
-			StopAnimate();
-			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
-			return;
-		}
-	}
-	UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
 }
 void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offset, FRotator SightRotation){
 	Sight = SightToSet;
@@ -488,9 +438,76 @@ void UCPP_WeaponAnimComponent::SetSway(FName SwayName){
 		UE_LOG(LogTemp, Error, TEXT("SwayName %s not found"), *SwayName.ToString());
 	}
 }
-
+bool UCPP_WeaponAnimComponent::StartAnimate(){
+	WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		//尝试获取Owner Pawn
+	OwnerPawn = Cast<APawn>(GetOwner());
+	if (!InitSuccess){
+		UE_LOG(LogTemp, Error, TEXT("WeaponAnimComponent Initalization was not successful, cannot play animation"));
+		return false;
+	}
+	if (!OwnerPawn){
+		StopAnimate();
+		UE_LOG(LogTemp, Error, TEXT("OwnerPawn not found"));
+		return false;
+	}
+	TrySetController();
+	if (!Controller)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Weapon Anim Component: Player Controller init failed!"));
+		StopAnimate();
+		return false;
+	}
+	//Base模块初始化
+	if (BaseStates.Contains(DefaultBase)){
+		TargetBaseTransform = BaseStates[DefaultBase];
+		CurrentBaseLocation = TargetBaseTransform.GetLocation();
+		CurrentBaseRotation = TargetBaseTransform.GetRotation().Rotator();
+	}else{
+		StopAnimate();
+		UE_LOG(LogTemp, Error, TEXT("Base default not found, check settings under Base"));
+		return false;
+	}
+	//Bob模块初始化
+	if (BobStates.Contains(DefaultBobStatic) && BobStates.Contains(DefaultBobMovement)){
+		CurrentStaticBob = BobStates[DefaultBobStatic];
+		CurrentMovementBob = BobStates[DefaultBobMovement];
+	}else{
+		StopAnimate();
+		UE_LOG(LogTemp, Error, TEXT("Bob default not found, check settings under Bob"));
+		return false;
+	}
+	//Sway模块初始化
+	if (SwayStates.Contains(DefaultSway)){
+		CurrentSwayStruct = SwayStates[DefaultSway];
+	}else{
+		StopAnimate();
+		UE_LOG(LogTemp, Error, TEXT("Sway default not found, check settings under Sway"));
+		return false; 
+	}
+	//Recoil模块初始化
+	if (RecoilStates.Contains(DefaultRecoil)){
+		CurrentRecoilStruct = RecoilStates[DefaultRecoil];
+	}else{
+		StopAnimate();
+		UE_LOG(LogTemp, Error, TEXT("Recoil default not found, check settings under Recoil"));
+		return false;
+	}
+	if (!DecoupleCamManagerTransform){
+		if (Controller) {
+			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		}else{
+			StopAnimate();
+			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
+			return false;
+		}
+	}
+	SetComponentTickEnabled(true);
+	return true;
+}
 void UCPP_WeaponAnimComponent::StopAnimate(){
 	PlayingADSAnimation = false;
 	IsAiming = false;
 	SetComponentTickEnabled(false);
+	WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
 }

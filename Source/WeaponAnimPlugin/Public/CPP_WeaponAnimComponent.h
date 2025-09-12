@@ -41,12 +41,15 @@ public:
 	USceneComponent *CameraRoot = nullptr;
 	UFUNCTION(BlueprintCallable)
 	void Init(USceneComponent *WeaponRootToSet, USceneComponent *SightToSet, USceneComponent *CameraRootToSet);
+	bool InitSuccess = false;
 	APlayerController *Controller = nullptr;
 	void TrySetController();
 	FVector CamInitialLocation;
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void UpdateSettings();
 	APawn *OwnerPawn = nullptr;
+	UFUNCTION(BlueprintCallable)
+	bool StartAnimate();
 	UFUNCTION(BlueprintCallable)
 	void StopAnimate();
 	// 设置玩家输入数据
