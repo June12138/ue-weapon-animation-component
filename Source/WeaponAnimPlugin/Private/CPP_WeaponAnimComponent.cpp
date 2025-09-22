@@ -509,5 +509,7 @@ void UCPP_WeaponAnimComponent::StopAnimate(){
 	PlayingADSAnimation = false;
 	IsAiming = false;
 	SetComponentTickEnabled(false);
-	WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
+	if (WeaponRoot){
+		WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
+	}
 }
