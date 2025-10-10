@@ -503,6 +503,7 @@ bool UCPP_WeaponAnimComponent::StartAnimate(){
 		}
 	}
 	SetComponentTickEnabled(true);
+	OnStartAnimate.Broadcast();
 	return true;
 }
 void UCPP_WeaponAnimComponent::StopAnimate(){
@@ -512,4 +513,5 @@ void UCPP_WeaponAnimComponent::StopAnimate(){
 	if (WeaponRoot){
 		WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
 	}
+	OnStopAnimate.Broadcast();
 }

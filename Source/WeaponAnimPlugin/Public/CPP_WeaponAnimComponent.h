@@ -260,4 +260,10 @@ public:
 	float ADSAlpha = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
 	float ADSInterpolationRate = 5.f; // ADS插值速率
+	// 代理
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVoidDelegate);
+	UPROPERTY(BlueprintAssignable)
+	FVoidDelegate OnStartAnimate;
+	UPROPERTY(BlueprintAssignable)
+	FVoidDelegate OnStopAnimate;
 };
