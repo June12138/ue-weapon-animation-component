@@ -146,11 +146,11 @@ void UCPP_WeaponAnimComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	FRotator TotalRotationOffset = RecoilRotationResult + CurrentSway + CurrentBobResultRot + CurrentRecoilGradualRotOffset + FRotator(0.f, 0.f, CurrentMovementRotationOffset);
 	// ADS处理
 	ADSCorrection(TotalOffset, TotalRotationOffset, DeltaTime);
-	if (CurrentADSTime == 0.f){
+	if (!ToADS && !IsAiming){
 		//播放关镜动画时用插值
 		CurrentADSCorrection = FMath::Lerp(CurrentADSCorrection, TargetADSCorrection, SqrtAlpha(DeltaTime, ADSInterpolationRate));
 	}else{
-		//播放开镜动画时忽略插值直接设置
+		//播放开镜动画时按修正值设置
 		CurrentADSCorrection = TargetADSCorrection;
 	}
 	//CurrentADSCorrection = FMath::VInterpTo(CurrentADSCorrection, TargetADSCorrection, DeltaTime, ADSInterpolationRate);
@@ -201,6 +201,7 @@ void UCPP_WeaponAnimComponent::StartADS()
 	ToADS = true;
 	PlayingADSAnimation = true;
 	TargetBaseTransform.SetRotation(ADSBaseRotation.Quaternion());
+	UpdateSettings();
 }
 
 void UCPP_WeaponAnimComponent::EndADS()
@@ -208,7 +209,8 @@ void UCPP_WeaponAnimComponent::EndADS()
 	ToADS = false;
 	IsAiming = false;
 	PlayingADSAnimation = true;
-	CurrentADSTime = 0.f;
+	//CurrentADSTime = 0.f;
+	UpdateSettings();
 }
 void UCPP_WeaponAnimComponent::UpdateSway()
 {
@@ -265,6 +267,7 @@ void UCPP_WeaponAnimComponent::ADSCorrection(FVector TotalOffset, FRotator Total
 			}
 		}
 		ADSAlpha = ADSCurve->GetFloatValue(CurrentADSTime / ADSTime);
+		OnADSUpdate.Broadcast(CurrentADSTime / ADSTime);
 	}
 	// 根据TotalOffset和TotalRotationOffset预测结算后的准星的相对位置
 	FVector PredictedSightLocation = CurrentBaseLocation + TotalOffset + CurrentBaseRotation.RotateVector(TotalRotationOffset.RotateVector(CurrentSightOffset));
@@ -509,6 +512,7 @@ bool UCPP_WeaponAnimComponent::StartAnimate(){
 void UCPP_WeaponAnimComponent::StopAnimate(){
 	PlayingADSAnimation = false;
 	IsAiming = false;
+	ToADS = false;
 	SetComponentTickEnabled(false);
 	if (WeaponRoot){
 		WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);

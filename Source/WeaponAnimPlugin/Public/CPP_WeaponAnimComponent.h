@@ -226,7 +226,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetTilt(int Direction);
 	void UpdateTilt(float DeltaTime);
-	// ADS相关
+// ADS相关
 	bool ToADS = false;
 	UPROPERTY(BlueprintReadonly)
 	bool PlayingADSAnimation = false;
@@ -243,7 +243,10 @@ public:
 	void StartADS();
 	UFUNCTION(BlueprintCallable)
 	void EndADS();
+	// 当前开镜进度，最小0，最大同开镜所需时间（ADSTime）
+	UPROPERTY(BlueprintReadOnly)
 	float CurrentADSTime = 0.f;
+	// 开镜所需时间
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
 	float ADSTime = 0.2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
@@ -251,6 +254,10 @@ public:
 	float CurrentADSXOffset = TargetADSXOffset;
 	UFUNCTION(BlueprintCallable)
 	void SetSight(USceneComponent *SightToSet, float Offset, FRotator SightRotation);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FADSDelegate, float, progress);
+	// 该代理会在ADS进度变动时触发，方便外部获取ADS进度来更改FOV、准星等。最小值0，最大值1.0。
+	UPROPERTY(BlueprintAssignable)
+	FADSDelegate OnADSUpdate;
 	// 准星位置修正
 	void ADSCorrection(FVector TotalOffset, FRotator TotalRotationOffset, float DeltaTime);
 	FVector TargetSightOffset;
