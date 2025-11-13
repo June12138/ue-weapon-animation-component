@@ -253,24 +253,30 @@ public:
 	float TargetADSXOffset = 41;
 	float CurrentADSXOffset = TargetADSXOffset;
 	UFUNCTION(BlueprintCallable)
-	void SetSight(USceneComponent *SightToSet, float Offset, FRotator SightRotation);
+	void SetSight(USceneComponent *SightToSet, float Offset, FRotator SightRotation, FName BaseName = "");
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FADSDelegate, float, progress);
 	// 该代理会在ADS进度变动时触发，方便外部获取ADS进度来更改FOV、准星等。最小值0，最大值1.0。
 	UPROPERTY(BlueprintAssignable)
 	FADSDelegate OnADSUpdate;
-	// 准星位置修正
+	// 准星位置修正函数
 	void ADSCorrection(FVector TotalOffset, FRotator TotalRotationOffset, float DeltaTime);
 	FVector TargetSightOffset;
 	FVector CurrentSightOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
 	float SightOffsetInterpolationRate = 5.f;
 	float ADSAlpha = 0.f;
+	// ADS插值速率
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
-	float ADSInterpolationRate = 5.f; // ADS插值速率
+	float ADSInterpolationRate = 5.f; 
+	// ADS基准偏移: 对应Base States中的项。若为空，则自动计算（如果包含了骨骼动画，自动计算可能有偏差）。注意：此设置为偏移值而非绝对值；另外，Base States中的Rotation不会被采用（因为Rotation在ADS BaseRotation中设置）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ADS")
+	FName ADSBaseOffset = "";
 	// 代理
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVoidDelegate);
+	// 动画开播时的代理
 	UPROPERTY(BlueprintAssignable)
 	FVoidDelegate OnStartAnimate;
+	// 动画停播时的代理
 	UPROPERTY(BlueprintAssignable)
 	FVoidDelegate OnStopAnimate;
 };

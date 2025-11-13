@@ -76,7 +76,7 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 			}
 		}
 		// 设置ADS基准位置
-		SetSight(SightToSet, TargetADSXOffset, ADSBaseRotation);
+		SetSight(SightToSet, TargetADSXOffset, ADSBaseRotation, ADSBaseOffset);
 		// 设置摄像机初始位置, 用于计算侧头偏移
 		CamInitialLocation = CameraRoot->GetRelativeLocation();
 	}
@@ -91,12 +91,22 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		return; 
 	}
 }
-void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offset, FRotator SightRotation){
+void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offset, FRotator SightRotation, FName BaseName){
 	Sight = SightToSet;
 	TargetADSXOffset = Offset;
 	if (WeaponRoot && CameraRoot && Sight) {
-		// 设置ADS基准位置
-		TargetSightOffset = UKismetMathLibrary::MakeRelativeTransform(Sight->GetComponentTransform(), WeaponRoot->GetComponentTransform()).GetLocation();
+		if (BaseName != "" && BaseName != "None"){
+			// 如果设置了ADS基准位置偏移，则使用该位置
+			if (BaseStates.Contains(BaseName)){
+				TargetSightOffset = BaseStates[BaseName].GetLocation();
+			}
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("ADSBaseOffset not found in BaseStates"));
+			}
+		}else{
+			// 如果没有手动设置ADS基准位置偏移，则根据相对位置测算
+			TargetSightOffset = UKismetMathLibrary::MakeRelativeTransform(Sight->GetComponentTransform(), WeaponRoot->GetComponentTransform()).GetLocation();
+		}
 		ADSBaseRotation = SightRotation;
 	}
 }
