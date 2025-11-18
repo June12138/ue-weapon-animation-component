@@ -452,7 +452,12 @@ void UCPP_WeaponAnimComponent::SetSway(FName SwayName){
 	}
 }
 bool UCPP_WeaponAnimComponent::StartAnimate(){
-	WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
+	if (WeaponRoot){
+		WeaponRoot->AttachToComponent(CameraRoot, FAttachmentTransformRules::KeepRelativeTransform);
+	}else{
+		UE_LOG(LogTemp, Error, TEXT("WeaponRoot nullptr"));
+		return false;
+	}
 		//尝试获取Owner Pawn
 	OwnerPawn = Cast<APawn>(GetOwner());
 	if (!InitSuccess){
@@ -507,11 +512,17 @@ bool UCPP_WeaponAnimComponent::StartAnimate(){
 		return false;
 	}
 	if (!DecoupleCamManagerTransform){
-		if (Controller) {
-			WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		if (Controller->IsLocalController()){
+			if (Controller) {
+				WeaponRoot->AttachToComponent(Controller->PlayerCameraManager->GetTransformComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			}else{
+				StopAnimate();
+				UE_LOG(LogTemp, Error, TEXT("Controller not found"));
+				return false;
+			}
 		}else{
 			StopAnimate();
-			UE_LOG(LogTemp, Error, TEXT("Controller not found"));
+			UE_LOG(LogTemp, Warning, TEXT("Controller not local controller. If you still want animation to take effect, enable DecoupleCamManagerTransform."));
 			return false;
 		}
 	}
