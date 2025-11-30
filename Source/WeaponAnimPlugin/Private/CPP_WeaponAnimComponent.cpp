@@ -53,6 +53,7 @@ void UCPP_WeaponAnimComponent::BeginPlay()
 		StopAnimate();
 		return;
 	}
+	SetComponentTickEnabled(false);
 	// ...
 }
 
@@ -79,16 +80,19 @@ void UCPP_WeaponAnimComponent::Init(USceneComponent *WeaponRootToSet, USceneComp
 		SetSight(SightToSet, TargetADSXOffset, ADSBaseRotation, ADSBaseOffset);
 		// 设置摄像机初始位置, 用于计算侧头偏移
 		CamInitialLocation = CameraRoot->GetRelativeLocation();
-	}
-	else {
+	}else {
 		StopAnimate();
 		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init failed"));
 		return;
 	}
 	InitSuccess = true;
-	if (!StartAnimate()){
-		UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
-		return; 
+	if (PlayAnimationOnStart){
+		if (StartAnimate()){
+			UE_LOG(LogTemp, Warning, TEXT("WeaponAnimComponent Init Success"));
+			return; 
+		}
+	}else{
+		SetComponentTickEnabled(false);
 	}
 }
 void UCPP_WeaponAnimComponent::SetSight(USceneComponent* SightToSet, float Offset, FRotator SightRotation, FName BaseName){
@@ -255,9 +259,10 @@ void UCPP_WeaponAnimComponent::UpdateBob()
 }
 void UCPP_WeaponAnimComponent::ADSCorrection(FVector TotalOffset, FRotator TotalRotationOffset, float DeltaTime)
 {
-	// 根据曲线和时间计算ADS动画的插值
+	// 对瞄具位置进行插值更新，用于切换瞄具的情况
 	CurrentSightOffset = FMath::Lerp(CurrentSightOffset, TargetSightOffset, SqrtAlpha(DeltaTime, SightOffsetInterpolationRate));
 	CurrentADSXOffset = FMath::Lerp(CurrentADSXOffset, TargetADSXOffset, SqrtAlpha(DeltaTime, SightOffsetInterpolationRate));
+	// 根据曲线和时间计算ADS动画的插值
 	if (PlayingADSAnimation && ADSCurve) {
 		if (ToADS) {
 			CurrentADSTime = FMath::Clamp(CurrentADSTime + DeltaTime, 0.f, ADSTime);
